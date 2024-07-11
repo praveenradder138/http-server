@@ -1,9 +1,8 @@
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class Main {
     public static void main(String[] args) {
@@ -25,33 +24,50 @@ public class Main {
 
             InputStream inputStream = clientSocket.getInputStream();
 
-            byte[] bytes = inputStream.readAllBytes();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
-            String input = new String(bytes);
 
-            //GET /index.html HTTP/1.1\r\nHost: localhost:4221\r\nUser-Agent: curl/7.64.1\r\nAccept: */*\r\n\r\n
+            //GET /echo/abc HTTP/1.1\r\nHost: localhost:4221\r\nUser-Agent: curl/7.64.1\r\nAccept: */*\r\n\r\n
+            String line = reader.readLine();
 
-            String[] inputArray = input.split("\r\n");
-            String requestLine = inputArray[0];
+            System.out.println(line);
 
-            String resource = requestLine.split(" ")[1];
+            String[] inputArray = line.split(" ",0);
+
             OutputStream outputStream = clientSocket.getOutputStream();
-            if("abcdefg".equals(resource)){
-                System.out.println("Invalid url");
+            String target = inputArray[1];
+
+            String outputMessage = "";
+            System.out.println("target is "+target);
+            if ("/".equals(target)) {
+                outputStream.write("HTTP/1.1 200 OK\r\n\r\n".getBytes());
+            }else if(target.startsWith("/echo")){
+
+                String responseString = target.split("/")[2];
+
+
+                outputMessage = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + responseString.length() + "\r\n\r\n" +responseString;
+
+                System.out.println("output message is "+outputMessage);
+
+                outputStream.write(outputMessage.getBytes());
+            }else{
                 outputStream.write("HTTP/1.1 404 Not Found\r\n\r\n".getBytes());
             }
 
-            if("".equals(resource)){
-                System.out.println("Valid url");
-                outputStream.write("HTTP/1.1 200 OK\r\n\r\n".getBytes());
-            }
+
+
+
+            //HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 3\r\n\r\nabc
+            //HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 3\r\n\r\nabc
 
 
 
 
 
 
-        } catch (IOException e) {
+
+        } catch (Exception e) {
             System.out.println("IOException: " + e.getMessage());
         }
     }
